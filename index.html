@@ -1,0 +1,1536 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Cổng Tác Vụ NCTN 2</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'primary-blue': '#C41E3A',
+            'sidebar': '#0f172a',
+            'sidebar-hover': '#1e293b',
+            'muted': '#f8fafc'
+          }
+        }
+      }
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    .spinner{border:2px solid #e5e7eb;border-top:2px solid #C41E3A;border-radius:50%;width:16px;height:16px;animation:spin 1s linear infinite;display:inline-block;vertical-align:middle}
+    @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+    .header-container{background:linear-gradient(135deg,#C41E3A 0%,#EF4444 100%);position:relative;overflow:hidden}
+    .header-container::before{content:"";position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.08' fill-rule='evenodd'/%3E%3C/svg%3E");opacity:.4}
+    .modal{position:fixed;inset:0;background:rgba(15,23,42,0.35);display:none;align-items:center;justify-content:center;padding:20px;z-index:1000}
+    .section-title{display:flex;align-items:center;gap:8px}
+    .section-title .badge{background:rgba(196,30,58,.15);color:#7f1d1d;border:1px solid rgba(196,30,58,.35);padding:2px 8px;border-radius:9999px;font-size:12px;font-weight:600}
+    .submit-btn{background:linear-gradient(135deg,#C41E3A 0%,#EF4444 100%);box-shadow:0 4px 6px rgba(196,30,58,.1),0 1px 3px rgba(196,30,58,.08);transition:transform .2s ease,box-shadow .2s ease,opacity .2s ease,filter .2s ease;border-radius:9999px;position:relative}
+    .submit-btn:hover{transform:translateY(-1px);box-shadow:0 7px 14px rgba(196,30,58,.12),0 3px 6px rgba(196,30,58,.08);filter:brightness(1.03)}
+    .submit-btn:active{transform:translateY(0);opacity:.95}
+    .modal.open{display:flex}
+    .toast{position:fixed;right:16px;bottom:16px;background:#0b1324;color:#fff;padding:10px 12px;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.15);opacity:0;transform:translateY(10px);transition:.2s}
+    .toast.show{opacity:1;transform:translateY(0)}
+  </style>
+</head>
+<body class="bg-muted min-h-screen flex text-gray-800" style="font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'">
+  <!-- Sidebar -->
+  <aside class="w-64 min-h-screen bg-sidebar text-white flex flex-col py-8 px-4 shadow-lg">
+    <h1 class="text-xl font-bold tracking-wide pb-6 border-b border-red-200 mb-4">Cổng Tác Vụ NCTN 2</h1>
+    <nav class="flex flex-col gap-2 mt-2">
+      <button class="nav-btn py-2 px-4 rounded transition hover:bg-sidebar-hover text-left text-base" data-target="form1">Form 1 · Tra cứu tác vụ</button>
+      <!-- <button class="nav-btn py-2 px-4 rounded transition hover:bg-sidebar-hover text-left text-base" data-target="form4">Form 4 · Bảng theo dõi </button> -->
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main class="flex-1 py-10 flex flex-col items-center min-h-screen overflow-y-auto">
+    <div class="header-container relative w-full max-w-6xl rounded-xl overflow-hidden mb-8">
+      <div class="relative z-10 p-8 md:p-10">
+        <div class="flex items-center space-x-2 mb-3">
+          <div class="inline-block px-3 py-1 rounded-full text-xs font-semibold text-white" style="background-color: rgba(255,255,255,0.15); backdrop-filter: blur(5px);">Phòng NCTN 2</div>
+        </div>
+        <h2 class="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-1 tracking-tight">Cổng tác vụ NCTN 2 - Nội bộ</h2>
+        <p class="text-red-100 text-sm md:text-base">Vui lòng không chia sẻ link cổng tác vụ với người ngoài bộ phận.</p>
+      </div>
+    </div>
+
+    <!-- Form 1 -->
+    <section id="form1" class="w-full max-w-none bg-white p-6 rounded-lg shadow-md">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold text-red-800">Form 1 · Tra cứu tác vụ</h2>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Chọn tên</label>
+          <div class="flex gap-2">
+            <select id="f1-name" class="flex-1 border border-red-300 rounded-lg bg-slate-100 p-2 focus:outline-none focus:ring-2 focus:ring-red-200 focus:bg-white">
+              <option value="">— Chọn người —</option>
+            </select>
+            <button id="f1-search" class="px-4 py-2 rounded-lg text-white font-semibold bg-primary-blue hover:brightness-105">Tra cứu</button>
+          </div>
+          <p class="text-gray-500 text-xs mt-1">Chọn tên và nhấn Tra cứu để gửi yêu cầu và hiển thị tác vụ</p>
+        </div>
+      </div>
+      <div class="mt-4 overflow-auto max-h-[60vh] border border-gray-200 rounded-lg">
+        <table class="min-w-[1600px] w-full text-sm">
+          <thead class="bg-gradient-to-r from-red-100 to-red-50 sticky top-0">
+            <tr class="text-left text-gray-700">
+              <th class="px-3 py-2 min-w-[160px]">Trả báo cáo</th>
+              <th class="px-3 py-2 min-w-[140px]">Tình trạng</th>
+              <th class="px-3 py-2 min-w-[140px]">Mã</th>
+              <th class="px-3 py-2 min-w-[260px]">Tên tác vụ</th>
+              <th class="px-3 py-2 min-w-[160px]">Người yêu cầu</th>
+              <th class="px-3 py-2 min-w-[120px]">Công chuẩn</th>
+              <th class="px-3 py-2 min-w-[140px]">Ngày yêu cầu</th>
+              <th class="px-3 py-2 min-w-[140px]">Hạn mong muốn</th>
+              <th class="px-3 py-2 min-w-[140px]">Hạn đáp ứng</th>
+              <th class="px-3 py-2 min-w-[260px]">Mục đích đánh giá</th>
+              <th class="px-3 py-2 min-w-[240px]">Note</th>
+              <th class="px-3 py-2 min-w-[240px]">Yêu cầu test đặc biệt</th>
+              <th class="px-3 py-2 min-w-[260px]">Form báo cáo đánh giá</th>
+              <th class="px-3 py-2 min-w-[220px]">Tên file đính kèm</th>
+            </tr>
+          </thead>
+          <tbody id="f1-body" class="divide-y divide-gray-100">
+            <tr><td class="px-3 py-3 text-center text-gray-500" colspan="14">Chưa có dữ liệu</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="f1-pager" class="mt-2 flex items-center justify-between" style="display:none">
+        <div class="text-sm text-gray-600">
+          <span id="f1-page-info">Trang 1/1 (0 dòng)</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="text-sm text-gray-600">Hiển thị</label>
+          <select id="f1-size" class="border border-red-300 rounded-lg bg-slate-100 p-1 focus:outline-none focus:ring-2 focus:ring-red-200 focus:bg-white">
+            <option value="10" selected>10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+          </select>
+          <button id="f1-prev" class="px-3 py-1 rounded-lg border border-gray-300 text-gray-700 bg-white hover:bg-gray-50">Trước</button>
+          <button id="f1-next" class="px-3 py-1 rounded-lg text-white font-semibold bg-primary-blue hover:brightness-105">Sau</button>
+        </div>
+      </div>
+
+      <!-- Điểm lưu trữ file đính kèm -->
+      <div class="mt-4">
+        <a id="f1-storage-link" href="https://drive.google.com/drive/u/0/folders/1iVSNn6Ddv6jEun6lyMvOMcan2fpnFSpU" target="_blank" rel="noopener" title="Nhấn để mở và tự động copy liên kết"
+           class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-red-200 bg-red-50/30 text-primary-blue hover:bg-red-50">
+          Điểm lưu trữ file đính kèm
+        </a>
+        <p class="text-xs text-gray-500 mt-1">Nhấn để mở và copy liên kết.</p>
+      </div>
+    </section>
+
+
+    <!-- Form 4 - TEMPORARILY HIDDEN -->
+    <!-- <section id="form4" class="w-full max-w-none bg-white p-6 rounded-lg shadow-md hidden">
+      <div class="flex items-center justify-between mb-4">
+        <div class="section-title">
+          <h2 class="text-xl font-semibold text-red-800">Form 4 · Bảng theo dõi</h2>
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="text-sm text-gray-700">Trạng thái</label>
+          <select id="f4-status" class="border border-red-300 rounded-lg bg-slate-100 p-2 focus:outline-none focus:ring-2 focus:ring-red-200 focus:bg-white">
+            <option value="Doing" selected>Doing</option>
+            <option value="All">Tất cả tác vụ</option>
+          </select>
+          <label class="text-sm text-gray-700">Từ ngày</label>
+          <input id="f4-from" type="date" class="border border-red-300 rounded-lg bg-slate-100 p-2 focus:outline-none focus:ring-2 focus:ring-red-200 focus:bg-white"/>
+          <label class="text-sm text-gray-700">Đến ngày</label>
+          <input id="f4-to" type="date" class="border border-red-300 rounded-lg bg-slate-100 p-2 focus:outline-none focus:ring-2 focus:ring-red-200 focus:bg-white"/>
+          <button id="f4-search" class="submit-btn px-4 py-2 text-white font-semibold transition">Tra cứu</button>
+        </div>
+      </div>
+      <div class="mt-4 overflow-auto max-h-[60vh] border border-gray-200 rounded-lg">
+        <table class="min-w-[480px] w-full text-sm">
+          <thead class="bg-gradient-to-r from-red-100 to-red-50 sticky top-0">
+            <tr class="text-left text-gray-700">
+              <th class="px-3 py-2 relative">
+                <button id="f4-filter-toggle" class="inline-flex items-center gap-1 hover:text-primary-blue">
+                  Nhân viên <span class="text-xs">▾</span>
+                </button>
+                <div id="f4-filter-pop" class="absolute z-20 mt-2 left-0 w-72 bg-white border border-gray-200 rounded-lg shadow-lg p-3 hidden">
+                  <div class="flex items-center gap-2 mb-2">
+                    <input id="f4-filter-search" type="text" placeholder="Tìm người..." class="flex-1 border border-red-300 rounded bg-slate-100 p-2 focus:outline-none focus:ring-2 focus:ring-red-200 focus:bg-white"/>
+                  </div>
+                  <div class="flex items-center justify-between text-xs text-gray-600 mb-2">
+                    <div class="flex items-center gap-3">
+                      <button id="f4-filter-select-all" class="underline">Chọn tất cả</button>
+                      <button id="f4-filter-clear" class="underline">Bỏ chọn</button>
+                    </div>
+                    <button id="f4-filter-apply" class="px-2 py-1 rounded bg-primary-blue text-white text-xs">Lọc</button>
+                  </div>
+                  <div id="f4-filter-list" class="max-h-60 overflow-auto space-y-1 text-sm">
+                    <label class="flex items-center gap-2" data-name="(Chỗ trống)"><input type="checkbox" value="(Chỗ trống)" class="f4-filter-item h-4 w-4"/><span>(Chỗ trống)</span></label>
+                  </div>
+                </div>
+              </th>
+              <th class="px-3 py-2">Công chuẩn hiện tại</th>
+              <th class="px-3 py-2">Số tác vụ</th>
+            </tr>
+          </thead>
+          <tbody id="f4-body" class="divide-y divide-gray-100">
+            <tr><td class="px-3 py-3 text-center text-gray-500" colspan="3">Chưa có dữ liệu</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="f4-chart-container" class="mt-4 h-80" style="display:none">
+        <canvas id="f4-chart"></canvas>
+      </div>
+    </section> -->
+
+  </main>
+
+  <!-- Upload Modal -->
+  <div id="upload-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="upload-title">
+    <div class="w-full max-w-lg bg-white rounded-xl border border-gray-200 shadow-xl overflow-hidden">
+      <div class="px-4 py-3 bg-gradient-to-b from-red-50 to-white border-b border-gray-200">
+        <h3 id="upload-title" class="text-base font-semibold text-gray-800">Gửi báo cáo</h3>
+      </div>
+      <div class="p-4 space-y-3">
+        <div class="flex flex-wrap gap-2 text-sm">
+          <span class="px-3 py-1 rounded-full bg-red-50 border border-red-200">Người nộp: <b class="ml-1" id="uploader-name"></b></span>
+          <span class="px-3 py-1 rounded-full bg-red-50 border border-red-200">Mã: <b class="ml-1" id="uploader-code"></b></span>
+          <span class="px-3 py-1 rounded-full bg-red-50 border border-red-200">Tác vụ: <b class="ml-1" id="uploader-task"></b></span>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Chọn tệp báo cáo</label>
+          <input id="upload-file" type="file" class="block w-full text-sm file:mr-2 file:py-1 file:px-3 file:rounded-full file:border-0 file:bg-primary-blue file:text-white"/>
+          <p class="text-xs text-gray-500 mt-1">Tệp sẽ gửi kèm timestamp tại thời điểm gửi.</p>
+        </div>
+        <div id="bps-option" class="flex items-center gap-2" style="display:none">
+          <input id="upload-bps" type="checkbox" class="h-4 w-4">
+          <label for="upload-bps" class="text-sm text-gray-700 select-none">Trả báo cáo BPS</label>
+        </div>
+      </div>
+      <div class="px-4 py-3 border-t border-gray-200 flex justify-end gap-2">
+        <button id="btn-cancel" class="px-4 py-2 rounded-lg bg-slate-100 text-gray-800">Huỷ</button>
+        <button id="btn-send" class="px-4 py-2 rounded-lg text-white font-semibold bg-primary-blue hover:brightness-105">Gửi báo cáo</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="detail-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="detail-title">
+    <div class="w-full max-w-5xl bg-white rounded-xl border border-gray-200 shadow-xl overflow-hidden">
+      <div class="px-4 py-3 bg-gradient-to-b from-red-50 to-white border-b border-gray-200 flex items-center justify-between">
+        <h3 id="detail-title" class="text-base font-semibold text-gray-800">Nhiệm vụ của <span id="detail-name" class="text-primary-blue"></span></h3>
+        <button id="detail-close" class="px-3 py-1 rounded-lg bg-slate-100 text-gray-800">Đóng</button>
+      </div>
+      <div class="p-4">
+        <div class="overflow-x-auto border border-gray-200 rounded-lg">
+          <table class="min-w-[900px] w-full text-sm">
+            <thead class="bg-gradient-to-r from-red-100 to-red-50 sticky top-0">
+              <tr class="text-left text-gray-700">
+                <th class="px-3 py-2">Mã</th>
+                <th class="px-3 py-2">Tên tác vụ</th>
+                <th class="px-3 py-2">Trạng thái</th>
+                <th class="px-3 py-2">Công chuẩn</th>
+                <th class="px-3 py-2">Ngày yêu cầu</th>
+                <th class="px-3 py-2">Hạn mong muốn</th>
+                <th class="px-3 py-2">Hạn đáp ứng</th>
+                <th class="px-3 py-2">Ngày hoàn thành</th>
+              </tr>
+            </thead>
+            <tbody id="detail-body" class="divide-y divide-gray-100">
+              <tr><td class="px-3 py-3 text-center text-gray-500" colspan="8">Chưa có dữ liệu</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="text-xs text-gray-500 mt-2" id="detail-note"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form 5 Submit Modal -->
+  <div id="f5-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="f5-modal-title">
+    <div class="w-full max-w-3xl bg-white rounded-xl border border-gray-200 shadow-xl overflow-hidden">
+      <div class="px-4 py-3 bg-gradient-to-b from-red-50 to-white border-b border-gray-200">
+        <h3 id="f5-modal-title" class="text-base font-semibold text-gray-800">Nộp ý tưởng cải tiến</h3>
+      </div>
+      <div class="p-4 space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Ngày</label>
+            <input id="f5-date" type="date" readonly class="w-full border border-red-300 rounded-lg bg-gray-200 p-2 text-gray-600"/>
+            <p class="text-gray-500 text-xs mt-1">Cố định theo ngày nhập</p>
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Nhân viên</label>
+            <select id="f5-employee" class="w-full border border-red-300 rounded-lg bg-slate-100 p-2 focus:outline-none focus:ring-2 focus:ring-red-200 focus:bg-white">
+              <option value="">— Chọn người —</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Tiêu đề ý tưởng</label>
+            <input id="f5-title" type="text" placeholder="Nhập tiêu đề" class="w-full border border-red-300 rounded-lg bg-slate-100 p-2 focus:outline-none focus:ring-2 focus:ring-red-200 focus:bg-white"/>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Vấn đề nhận diện</label>
+            <textarea id="f5-problem" rows="3" placeholder="Mô tả vấn đề" class="w-full border border-red-300 rounded-lg bg-slate-100 p-2 focus:outline-none focus:ring-2 focus:ring-red-200 focus:bg-white"></textarea>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Giải pháp</label>
+            <textarea id="f5-solution" rows="3" placeholder="Mô tả giải pháp" class="w-full border border-red-300 rounded-lg bg-slate-100 p-2 focus:outline-none focus:ring-2 focus:ring-red-200 focus:bg-white"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="px-4 py-3 border-t border-gray-200 flex justify-end gap-2">
+        <button id="f5-btn-cancel" class="px-4 py-2 rounded-lg bg-slate-100 text-gray-800">Huỷ</button>
+        <button id="f5-btn-send" class="px-4 py-2 rounded-lg text-white font-semibold bg-primary-blue hover:brightness-105">Gửi ý tưởng</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    // Constants
+    const WEBHOOK_URL = "https://xcqiyibqs.tino.page/webhook-test/44ea331c-73a7-49bb-8929-af80dcbe2be0";
+    const FORM1_UPLOAD_URL = "https://xcqiyibqs.tino.page/webhook/0cbfe158-5db1-4da8-a973-5e7f8d8b7603";
+    let F4_CHART = null;
+    let F5_LAST_COUNT = 0;
+
+    // Sidebar navigation
+    const navBtns = document.querySelectorAll('.nav-btn');
+    const sections = ['form1'].map(id=>document.getElementById(id));
+    function showSection(id){ sections.forEach(s=>s.classList.toggle('hidden', s.id!==id)); }
+    navBtns.forEach((btn)=>{
+      btn.onclick=()=>{
+        navBtns.forEach(b=>b.classList.remove('bg-primary-blue','font-bold'));
+        btn.classList.add('bg-primary-blue','font-bold');
+        const target = btn.getAttribute('data-target');
+        showSection(target);
+        
+      }
+    });
+    // Default
+    navBtns[0].classList.add('bg-primary-blue','font-bold');
+    showSection(navBtns[0].getAttribute('data-target'));
+
+    // Names
+    const FORM1_NAMES = [
+      "Trần Văn Hoàng",
+      "Nguyễn Kim Cương",
+      "Trịnh Xuân Hạnh",
+      "Đỗ Xuân Huy",
+      "Giang Văn Toàn",
+      "Vũ Ngọc Diệp",
+    ];
+    
+
+    // Dữ liệu tác vụ (khởi tạo rỗng; sẽ nối nguồn thật sau)
+    const demoTasksForm1 = {};
+    
+
+    // Fill selects
+    function fillSelect(sel, arr){ arr.forEach(n=>{ const o=document.createElement('option'); o.value=n; o.textContent=n; sel.appendChild(o); }); }
+    fillSelect(document.getElementById('f1-name'), FORM1_NAMES);
+    const f4PeopleSel = document.getElementById('f4-people');
+    if (f4PeopleSel) fillSelect(f4PeopleSel, FORM1_NAMES);
+
+    // Toast
+    const toastEl = document.getElementById('toast');
+    function showToast(msg,type='info'){
+      toastEl.textContent = msg;
+      toastEl.style.background = type==='success' ? '#137a39' : (type==='error' ? '#b42318' : '#0b1324');
+      toastEl.classList.add('show');
+      setTimeout(()=>toastEl.classList.remove('show'), 2600);
+    }
+
+    // Upload modal
+    const modal = document.getElementById('upload-modal');
+    const fileInput = document.getElementById('upload-file');
+    const uploaderName = document.getElementById('uploader-name');
+    const uploaderCode = document.getElementById('uploader-code');
+    const uploaderTask = document.getElementById('uploader-task');
+    let uploadContext = null;
+    let isModalSubmitting = false;
+    let lastOpenTrigger = null;
+    function openUploadModal(ctx){
+      uploadContext = ctx || {};
+      uploaderName.textContent = ctx?.name || '';
+      uploaderCode.textContent = ctx?.code || '';
+      uploaderTask.textContent = ctx?.taskName || '';
+      // Hide Người nộp pill no longer needed (Form 2 removed)
+      try {
+        const namePill = uploaderName && uploaderName.parentElement && uploaderName.parentElement.parentElement ? uploaderName.parentElement.parentElement : null;
+        if (namePill) namePill.style.display = '';
+        const bpsOption = document.getElementById('bps-option');
+        const bpsCheckbox = document.getElementById('upload-bps');
+        if (bpsOption) bpsOption.style.display = 'none';
+        if (bpsCheckbox) bpsCheckbox.checked = false;
+      } catch(_) {}
+      fileInput.value = '';
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden','false');
+    }
+    function closeUploadModal(){
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden','true');
+      // Re-enable last trigger and reset submit button state
+      if (lastOpenTrigger) {
+        try {
+          lastOpenTrigger.disabled = false;
+          if (lastOpenTrigger.classList) lastOpenTrigger.classList.remove('opacity-50','pointer-events-none');
+        } catch(_) {}
+        lastOpenTrigger = null;
+      }
+      const sendBtn = document.getElementById('btn-send');
+      if (sendBtn) {
+        sendBtn.disabled = false;
+        sendBtn.textContent = 'Gửi báo cáo';
+      }
+      isModalSubmitting = false;
+    }
+    document.getElementById('btn-cancel').onclick = closeUploadModal;
+    modal.addEventListener('click', (e)=>{ if(e.target===modal) closeUploadModal(); });
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && modal.classList.contains('open')) closeUploadModal(); });
+
+    document.getElementById('btn-send').onclick = async ()=>{
+      if (isModalSubmitting) return;
+      if(!fileInput.files || fileInput.files.length===0){ showToast('Vui lòng chọn tệp báo cáo.','error'); return; }
+      const btn = document.getElementById('btn-send');
+      isModalSubmitting = true;
+      if (btn) { btn.disabled = true; btn.innerHTML = "<span class='spinner mr-2'></span>Đang gửi..."; }
+      const fd = new FormData();
+      fd.append('file', fileInput.files[0]);
+      fd.append('file_name', fileInput.files[0].name || '');
+      fd.append('timestamp', new Date().toISOString());
+      if(uploadContext){
+        fd.append('nguoi_nop', uploadContext.name||'');
+        fd.append('ma_tac_vu', uploadContext.code||'');
+        fd.append('ten_tac_vu', uploadContext.taskName||'');
+        fd.append('form', uploadContext.form||'');
+      }
+      const bpsCheckbox = document.getElementById('upload-bps');
+      fd.append('is_bps', '0');
+      const targetUpload = FORM1_UPLOAD_URL;
+      try{
+        await fetch(targetUpload,{method:'POST',body:fd, mode: 'no-cors'});
+        showToast('Đã gửi báo cáo.','success');
+        closeUploadModal();
+      }
+      catch(e){
+        console.error(e);
+        showToast('Gửi thất bại.','error');
+        isModalSubmitting = false;
+        if (btn) { btn.disabled = false; btn.textContent = 'Gửi báo cáo'; }
+      }
+    };
+
+    // Helpers for tables
+    function addTd(tr, text){ const td=document.createElement('td'); td.className='px-3 py-2 align-top'; td.textContent=text; tr.appendChild(td); }
+
+    // Form 1: fetch via webhook with query for headers/fields
+    let F1_ALL_ROWS = [];
+    let F1_PAGE = 1;
+    let F1_SIZE = 10;
+    function applyForm1Paging(){
+      const body = document.getElementById('f1-body');
+      const pager = document.getElementById('f1-pager');
+      const total = F1_ALL_ROWS.length;
+      if(total === 0){
+        body.innerHTML = '<tr><td class="px-3 py-3 text-center text-gray-500" colspan="12">Không có tác vụ</td></tr>';
+        pager.style.display = 'none';
+        return;
+      }
+      pager.style.display = '';
+      const maxPage = Math.max(1, Math.ceil(total / F1_SIZE));
+      if(F1_PAGE > maxPage) F1_PAGE = maxPage;
+      const start = (F1_PAGE - 1) * F1_SIZE;
+      const end = Math.min(total, start + F1_SIZE);
+      const slice = F1_ALL_ROWS.slice(start, end);
+      const pageInfo = document.getElementById('f1-page-info');
+      if(pageInfo) pageInfo.textContent = `Trang ${F1_PAGE}/${maxPage} (${total} dòng)`;
+      const prev = document.getElementById('f1-prev');
+      const next = document.getElementById('f1-next');
+      if(prev) prev.disabled = (F1_PAGE <= 1);
+      if(next) next.disabled = (F1_PAGE >= maxPage);
+      // render rows
+      body.innerHTML = '';
+      slice.forEach(tr => body.appendChild(tr));
+    }
+
+    async function renderForm1(){
+      const name = (document.getElementById('f1-name').value || '').trim();
+      const body = document.getElementById('f1-body');
+      if(!name){ body.innerHTML = '<tr><td class="px-3 py-3 text-center text-gray-500" colspan="12">Vui lòng chọn tên</td></tr>'; return; }
+      body.innerHTML = "<tr><td colspan='12' class='px-3 py-3 text-center text-gray-500'><span class='spinner mr-2'></span>Đang tải...</td></tr>";
+      try{
+          const headerMapF1 = {
+          header_btn: 'Nút nhập gửi báo cáo',
+          header_requester: 'Người yêu cầu',
+          header_requestDate: 'Ngày yêu cầu',
+          header_wishDue: 'Hạn mong muốn',
+          header_actualDue: 'Hạn đáp ứng',
+          header_code: 'Mã',
+          header_taskName: 'Tên tác vụ',
+            header_manHour: 'Công chuẩn',
+          header_purpose: 'Mục đích đánh giá',
+          header_note: 'Note',
+          header_specialTest: 'Yêu cầu test đặc biệt',
+          header_reportForm: 'Form báo cáo đánh giá',
+          header_status: 'Trạng thái',
+          header_attachmentFileName: 'Tên file đính kèm',
+          field_requester: 'requester',
+          field_requestDate: 'requestDate',
+          field_wishDue: 'wishDue',
+          field_actualDue: 'actualDue',
+          field_code: 'code',
+          field_taskName: 'taskName',
+            field_manHour: 'manHour',
+          field_purpose: 'purpose',
+          field_note: 'note',
+          field_specialTest: 'specialTest',
+          field_reportForm: 'reportForm',
+          field_status: 'status',
+          field_attachmentFileName: 'attachmentFileName'
+        };
+        const params = new URLSearchParams({
+          ...headerMapF1,
+          action: 'form1_lookup',
+          person_name: name,
+          timestamp: new Date().toISOString()
+        });
+        const testUrl = `${WEBHOOK_URL}?${params.toString()}`;
+        async function fetchJson(url){
+          const r = await fetch(url, { method: 'GET' });
+          const text = await r.text();
+          if(!r.ok) throw new Error(text || `HTTP ${r.status}`);
+          let parsed = null; try{ parsed = JSON.parse(text); }catch{ parsed = null; }
+          return { parsed, raw: text };
+        }
+        let data = null; let firstErr = null;
+        try{
+          const { parsed, raw } = await fetchJson(testUrl);
+          if (parsed && parsed.code === 0 && /could not be started/i.test(String(parsed.message||''))) {
+            throw new Error('WEBHOOK_TEST_INACTIVE');
+          }
+          data = parsed ?? raw;
+        } catch (e) {
+          firstErr = e;
+          // Fallback sang production webhook khi test webhook chưa bật lắng nghe
+          const prodUrl = testUrl.replace('/webhook-test/', '/webhook/');
+          const { parsed, raw } = await fetchJson(prodUrl);
+          data = parsed ?? raw;
+        }
+        function pickRows(json){
+          if (!json) return [];
+          if (Array.isArray(json)) return json;
+          const candidates = ['data','rows','result','records','items','list'];
+          for (const k of candidates){ if (Array.isArray(json?.[k])) return json[k]; }
+          // Deep search first array of objects
+          try{
+            const queue = [json];
+            const seen = new Set();
+            while(queue.length){
+              const cur = queue.shift();
+              if (!cur || typeof cur !== 'object' || seen.has(cur)) continue;
+              seen.add(cur);
+              for (const v of Object.values(cur)){
+                if (Array.isArray(v) && v.length && typeof v[0] === 'object') return v;
+                if (v && typeof v === 'object') queue.push(v);
+              }
+            }
+          }catch(_){ }
+          return [];
+        }
+        const rows = pickRows(data);
+        if(!rows.length){ body.innerHTML = "<tr><td colspan='14' class='px-3 py-3 text-center text-gray-500'>Không có tác vụ</td></tr>"; return; }
+        const getV = (obj, keys)=>{
+          const lower = Object.keys(obj||{}).reduce((acc,k)=>{ acc[k.toLowerCase()] = obj[k]; return acc; },{});
+          for(const k of keys){ const v = lower[k.toLowerCase()]; if(v!==undefined) return v; }
+          return '';
+        };
+        F1_ALL_ROWS = [];
+        rows.forEach(item=>{
+          const tr=document.createElement('tr');
+          const tdBtn=document.createElement('td'); tdBtn.className='px-3 py-2';
+          const code = getV(item,['code','ma','taskcode','mã']);
+          const tname = getV(item,['taskname','ten_tac_vu','ten','name','title','tên tác vụ']);
+          // Xác định trạng thái để quyết định cho phép gửi báo cáo hay không
+          const statusText = getV(item,['status','trangthai','trang_thai','trạng thái']);
+          const statusLower = (statusText||'').toLowerCase();
+          const isDone = statusLower.includes('hoàn') || statusLower.includes('done');
+          const isCancelled = statusLower.includes('cancel') || statusLower.includes('hủy') || statusLower.includes('huỷ');
+          const isEmptyStatus = statusLower.trim()==='';
+          const isLocked = isDone || isCancelled || isEmptyStatus;
+          // Tạo input file ẩn cho mỗi hàng + nút Trả báo cáo
+          const inputId = `f1-upload-${Math.random().toString(36).slice(2)}`;
+          const fileInput = document.createElement('input');
+          fileInput.type = 'file';
+          fileInput.id = inputId;
+          fileInput.className = 'hidden';
+          const labelBtn = document.createElement('label');
+          labelBtn.htmlFor = inputId;
+          if (isLocked) {
+            fileInput.disabled = true;
+            labelBtn.className = 'px-3 py-1 inline-block rounded-lg bg-gray-300 text-gray-500 cursor-not-allowed opacity-60 pointer-events-none';
+            labelBtn.textContent = isCancelled ? 'Đã hủy' : (isDone ? 'Đã hoàn thành' : 'Không thể gửi');
+            labelBtn.title = isCancelled ? 'Tác vụ đã hủy, không thể gửi báo cáo' : (isDone ? 'Tác vụ đã hoàn thành, không thể gửi báo cáo' : 'Trạng thái trống, không thể gửi báo cáo');
+          } else {
+            labelBtn.className = 'px-3 py-1 inline-block rounded-lg text-white bg-primary-blue hover:brightness-105 cursor-pointer';
+            labelBtn.textContent = 'Trả báo cáo';
+            // Mở modal như Form 2 khi nhấn ở Form 1 (chống double-click)
+            labelBtn.onclick = (e)=>{
+              e.preventDefault();
+              if (labelBtn.disabled) return;
+              labelBtn.disabled = true;
+              labelBtn.classList.add('opacity-50','pointer-events-none');
+              lastOpenTrigger = labelBtn;
+              openUploadModal({ form: 'Form 1', name, code, taskName: tname });
+            };
+          }
+          // Với cách mở modal, không cần input file ẩn cho Form 1 nữa
+          tdBtn.appendChild(labelBtn);
+          tr.appendChild(tdBtn);
+          // Tình trạng, Mã, Tên tác vụ, Người yêu cầu, Ngày yêu cầu, Hạn mong muốn, Hạn đáp ứng, Mục đích đánh giá, Note, Yêu cầu test đặc biệt, Form báo cáo đánh giá
+          const tdStatus=document.createElement('td'); tdStatus.className='px-3 py-2';
+          const s=(statusText||'').toLowerCase();
+          const badge=document.createElement('span'); badge.className='px-2 py-1 rounded text-xs ' + (s.includes('hoàn')||s.includes('done')
+            ? 'bg-green-100 text-green-800'
+            : (s.includes('cancel')||s.includes('hủy')||s.includes('huỷ')||s.includes('chờ')||s.includes('pending'))
+              ? 'bg-yellow-100 text-yellow-800'
+              : 'bg-blue-100 text-blue-800');
+          badge.textContent=statusText||''; tdStatus.appendChild(badge); tr.appendChild(tdStatus);
+          addTd(tr, code);
+          addTd(tr, tname);
+          addTd(tr, getV(item,['requester','nguoiyeucau','nguoi_yeu_cau','assigner','người yêu cầu']));
+          // Công chuẩn (giữa Tên tác vụ và Ngày yêu cầu)
+          addTd(tr, getV(item,[
+            'manhour','man_hour','congchuan','cong_chuan','workload','sogio','sogiocong','công chuẩn'
+          ]));
+          addTd(tr, getV(item,['requestdate','ngayyeucau','ngay_yeu_cau','submissiondate','ngaygui','ngày yêu cầu']));
+          addTd(tr, getV(item,['wishdue','hanmongmuon','han_mong_muon','desireddue','hạn mong muốn']));
+          addTd(tr, getV(item,['actualdue','handapung','han_dap_ung','completiondate','hạn đáp ứng']));
+          addTd(tr, getV(item,['purpose','mucdich','muc_dich','mục đích đánh giá','muc dich danh gia','mucdichdanhgia']));
+          addTd(tr, getV(item,['note','ghi_chu','ghichu']));
+          addTd(tr, getV(item,['specialtest','yeucau_test_dac_biet','yeu_cau_test_dac_biet']));
+          addTd(tr, getV(item,['reportform','form_bao_cao','form_bao_cao_danh_gia']));
+          // Tên file đính kèm (nếu backend cung cấp)
+          addTd(tr, getV(item,[
+            'attachmentfilename','file_name','filename','tenfile','ten_file','tên file','tên file đính kèm','attachment','file'
+          ]));
+          F1_ALL_ROWS.push(tr);
+        });
+        applyForm1Paging();
+      }catch(err){
+        body.innerHTML = `<tr><td colspan='12' class='px-3 py-3 text-center text-red-600'>Lỗi tải dữ liệu: ${String(err.message||err)}</td></tr>`;
+      }
+    }
+    document.getElementById('f1-name').onchange = ()=>{};
+    const f1SearchBtn = document.getElementById('f1-search');
+    if (f1SearchBtn) {
+      let f1Busy = false;
+      f1SearchBtn.onclick = async (e)=>{
+        e.preventDefault();
+        if (f1Busy) return;
+        f1Busy = true;
+        f1SearchBtn.disabled = true;
+        const prev = f1SearchBtn.textContent;
+        f1SearchBtn.innerHTML = "<span class='spinner mr-2'></span>Đang tải...";
+        try { await renderForm1(); }
+        finally {
+          f1Busy = false;
+          f1SearchBtn.disabled = false;
+          f1SearchBtn.textContent = prev;
+        }
+      };
+    }
+    // Pagination events
+    const f1Prev = document.getElementById('f1-prev');
+    const f1Next = document.getElementById('f1-next');
+    const f1Size = document.getElementById('f1-size');
+    if (f1Prev) f1Prev.onclick = (e)=>{ e.preventDefault(); if(F1_PAGE>1){ F1_PAGE--; applyForm1Paging(); } };
+    if (f1Next) f1Next.onclick = (e)=>{ e.preventDefault(); F1_PAGE++; applyForm1Paging(); };
+    if (f1Size) f1Size.onchange = (e)=>{ F1_SIZE = parseInt(e.target.value||'10',10)||10; F1_PAGE=1; applyForm1Paging(); };
+
+    // Default Form 4 month = current month
+    (function setDefaultF4Month(){
+      const m = document.getElementById('f4-month');
+      if (!m) return;
+      const d = new Date();
+      const yy = d.getFullYear();
+      const mm = String(d.getMonth()+1).padStart(2,'0');
+      if (!m.value) m.value = `${yy}-${mm}`;
+    })();
+    // Default Form 4 date range = first day to last day of current month
+    (function setDefaultF4Range(){
+      const fromInput = document.getElementById('f4-from');
+      const toInput = document.getElementById('f4-to');
+      if (!fromInput && !toInput) return;
+      const now = new Date();
+      const year = now.getFullYear();
+      const monthIndex = now.getMonth(); // 0-11
+      const pad = (n)=> String(n).padStart(2, '0');
+      const firstDay = `${year}-${pad(monthIndex+1)}-01`;
+      const lastDate = new Date(year, monthIndex + 1, 0).getDate();
+      const lastDay = `${year}-${pad(monthIndex+1)}-${pad(lastDate)}`;
+      if (fromInput && !fromInput.value) fromInput.value = firstDay;
+      if (toInput && !toInput.value) toInput.value = lastDay;
+    })();
+    // Helper: set default date for Form 5 inputs
+    function setF5DateDefault(){
+      const el = document.getElementById('f5-date');
+      if (!el) return;
+      const d = new Date();
+      const pad = n=>String(n).padStart(2,'0');
+      el.value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    }
+
+    // Form 3: upload to Google Drive via Apps Script (as in index.html)
+    (function setupForm3Upload(){
+      const fileInput = document.getElementById('attach');
+      const list = document.getElementById('f3-upload-list');
+      if (!fileInput || !list) return;
+      list.innerHTML = '';
+      fileInput.addEventListener('change', async function(){
+        if (!this.files || this.files.length === 0) return;
+        const file = this.files[0];
+        const row = document.createElement('div');
+        row.className = "flex items-center justify-between p-2 bg-blue-50 rounded";
+        row.innerHTML = `<span>📄<span class="ml-2">${file.name}</span></span><span class="spinner"></span>`;
+        list.innerHTML = '';
+        list.appendChild(row);
+        try{
+          const url = await new Promise((resolve, reject)=>{
+            const reader = new FileReader();
+            reader.onload = async ()=>{
+              try{
+                const base64 = reader.result.split(',')[1];
+                const form = new URLSearchParams();
+                form.append('filedata', base64);
+                form.append('filename', file.name);
+                form.append('mimetype', file.type);
+                const resp = await fetch(UPLOAD_SCRIPT_URL, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                  body: form.toString()
+                });
+                if(!resp.ok) throw new Error('Upload failed');
+                const raw = await resp.text();
+                let parsedUrl = '';
+                try{
+                  const j = JSON.parse(raw);
+                  parsedUrl = j.url || j.fileUrl || j.public_url || j.link || (j.data && j.data[0] && j.data[0].url) || '';
+                }catch(_){
+                  const match = (raw || '').match(/https?:\/\/[^\s"']+/);
+                  parsedUrl = match ? match[0] : '';
+                }
+                resolve(parsedUrl || '#');
+              }catch(err){ reject(err); }
+            };
+            reader.onerror = ()=>reject(new Error('File read error'));
+            reader.readAsDataURL(file);
+          });
+          row.innerHTML = `
+            <span>📄<span class="ml-2">${file.name}</span></span>
+            <span class="flex items-center gap-3">
+              <span class="text-green-700 bg-green-100 px-2 py-0.5 rounded text-xs">Đã tải lên</span>
+              <a href="${url}" target="_blank" class="text-primary-blue underline">Xem</a>
+            </span>
+          `;
+        }catch(err){
+          const spinnerEl = row.querySelector('.spinner');
+          if (spinnerEl) spinnerEl.outerHTML = `<span class="text-red-600">Thất bại</span>`;
+          setTimeout(()=>{ try{ list.removeChild(row);}catch(_){} }, 2000);
+        }
+        this.value = '';
+      });
+    })();
+
+    // Submit Form 3 to SheetDB with required mapping
+    document.getElementById('assign-form').onsubmit = async (e)=>{
+      e.preventDefault();
+      const requester = document.getElementById('rq-by').value.trim();
+      const taskName = (document.getElementById('task-name')?.value || '').trim();
+      const rqTime = document.getElementById('rq-time').value;
+      const manHourRaw = document.getElementById('man-hour').value;
+      const output = document.getElementById('output').value.trim();
+      const assignee = (document.getElementById('f3-assignee').value || '').trim();
+      const deadline = document.getElementById('deadline').value;
+      const odooJira = document.getElementById('odoo-jira').value.trim();
+
+      if(!requester || !taskName || !output || !manHourRaw || !assignee){ showToast('Vui lòng điền đủ trường bắt buộc.','error'); return; }
+      if(!/^\d+(\.\d{1,2})?$/.test(manHourRaw)){ showToast('Công chuẩn tối đa 2 chữ số thập phân.','error'); return; }
+
+      const btn = e.target.querySelector('button[type="submit"]');
+      const prev = btn ? btn.textContent : '';
+      if (btn) { btn.disabled = true; btn.innerHTML = "<span class='spinner mr-2'></span>Đang gửi..."; }
+
+      const mapped = {
+        requesterName: requester,
+        requestDate: (rqTime || '').slice(0, 10),
+        itemName: taskName,
+        Score: String(manHourRaw || '').trim(),
+        changeReq: output,
+        Assignee: assignee,
+        desiredDate: String(deadline || '').trim(),
+        Odoojira: odooJira,
+        deptRequest: 'NCTN 2'
+      };
+      const body = { data: [mapped] };
+
+      try{
+        const resp = await fetch(SHEETDB_API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        if (!resp.ok) {
+          const t = await resp.text();
+          throw new Error(t || `HTTP ${resp.status}`);
+        }
+        showToast('Đã giao việc và gửi dữ liệu.','success');
+        e.target.reset();
+        setRqTime();
+      }catch(err){
+        console.error(err);
+        showToast('Gửi thất bại.','error');
+      }finally{
+        if (btn) { btn.disabled = false; btn.textContent = prev || 'Giao việc'; }
+      }
+    };
+
+    // ===== Form 4: filter popover & selection =====
+    let F4_SELECTED_NAMES = new Set();
+    let F4_ALL_NAMES = [];
+
+    function f4BuildFilterList(names){
+      const list = document.getElementById('f4-filter-list');
+      if (!list) return;
+      list.innerHTML = '';
+      const uniq = Array.from(new Set(names)).sort((a,b)=> a.localeCompare(b,'vi'));
+      uniq.forEach(n=>{
+        const safe = n.replace(/"/g,'&quot;');
+        const checked = (F4_SELECTED_NAMES.size===0) || F4_SELECTED_NAMES.has(n);
+        const row = document.createElement('label');
+        row.className = 'flex items-center gap-2';
+        row.setAttribute('data-name', n);
+        row.innerHTML = `<input type="checkbox" value="${safe}" class="f4-filter-item h-4 w-4" ${checked?'checked':''}/><span>${safe}</span>`;
+        list.appendChild(row);
+      });
+    }
+    function f4SyncSelectionFromUI(){
+      const list = document.getElementById('f4-filter-list');
+      if (!list) return;
+      const boxes = list.querySelectorAll('input.f4-filter-item');
+      const picked = [];
+      boxes.forEach(b=>{ if (b.checked) picked.push(b.value); });
+      if (picked.length === boxes.length || picked.length === 0) {
+        F4_SELECTED_NAMES.clear();
+      } else {
+        F4_SELECTED_NAMES = new Set(picked);
+      }
+    }
+    (function f4InitFilterPopover(){
+      const btn = document.getElementById('f4-filter-toggle');
+      const pop = document.getElementById('f4-filter-pop');
+      const list = document.getElementById('f4-filter-list');
+      const search = document.getElementById('f4-filter-search');
+      const selAll = document.getElementById('f4-filter-select-all');
+      const clear = document.getElementById('f4-filter-clear');
+      const applyBtn = document.getElementById('f4-filter-apply');
+      if (!btn || !pop) return;
+      btn.addEventListener('click', (e)=>{ e.preventDefault(); pop.classList.toggle('hidden'); if(!pop.classList.contains('hidden')){ try{ search&&search.focus(); }catch(_){} }});
+      document.addEventListener('click', (e)=>{ if (!pop || pop.classList.contains('hidden')) return; if (btn.contains(e.target) || pop.contains(e.target)) return; pop.classList.add('hidden'); });
+      if (list) list.addEventListener('change', (e)=>{ /* không auto render khi tick */ });
+      if (search) search.addEventListener('input', (e)=>{
+        const q = (e.target.value||'').toLowerCase().trim();
+        pop.querySelectorAll('label[data-name]').forEach(el=>{
+          const nm = (el.getAttribute('data-name')||'').toLowerCase();
+          el.style.display = nm.includes(q) ? '' : 'none';
+        });
+      });
+      if (selAll) selAll.addEventListener('click',(e)=>{ e.preventDefault(); pop.querySelectorAll('input.f4-filter-item').forEach(cb=> cb.checked=true); });
+      if (clear) clear.addEventListener('click',(e)=>{ e.preventDefault(); pop.querySelectorAll('input.f4-filter-item').forEach(cb=> cb.checked=false); });
+      if (applyBtn) applyBtn.addEventListener('click',(e)=>{ e.preventDefault(); f4SyncSelectionFromUI(); pop.classList.add('hidden'); renderForm4(); });
+    })();
+
+    // Helper: đếm số tác vụ theo người với filter trạng thái
+    async function f4FetchTaskCount(name, statusVal, fromVal, toVal){
+      const headerMapF1 = {
+        header_code: 'Mã',
+        header_taskName: 'Tên tác vụ',
+        header_status: 'Trạng thái',
+        field_code: 'code',
+        field_taskName: 'taskName',
+        field_status: 'status'
+      };
+      const params = new URLSearchParams({
+        ...headerMapF1,
+        action: 'form1_lookup',
+        person_name: name,
+        timestamp: new Date().toISOString()
+      });
+      if (fromVal) params.append('from', fromVal);
+      if (toVal) params.append('to', toVal);
+      async function fetchJson(url){
+        const r = await fetch(url, { method: 'GET' });
+        const text = await r.text();
+        let parsed = null; try{ parsed = JSON.parse(text); }catch{ parsed = null; }
+        return { ok: r.ok, parsed, raw: text, status: r.status };
+      }
+      function pickRows(json){
+        if (!json) return [];
+        if (Array.isArray(json)) return json;
+        const candidates = ['data','rows','result','records','items','list'];
+        for (const k of candidates){ if (Array.isArray(json?.[k])) return json[k]; }
+        try{
+          const queue=[json]; const seen=new Set();
+          while(queue.length){
+            const cur=queue.shift(); if(!cur||typeof cur!=='object'||seen.has(cur)) continue; seen.add(cur);
+            for (const v of Object.values(cur)){
+              if (Array.isArray(v) && v.length && typeof v[0]==='object') return v;
+              if (v && typeof v==='object') queue.push(v);
+            }
+          }
+        }catch(_){}
+        return [];
+      }
+      function getV(obj, keys){
+        const lower = Object.keys(obj||{}).reduce((acc,k)=>{ acc[k.toLowerCase()] = obj[k]; return acc; },{});
+        for(const k of keys){ const v = lower[k.toLowerCase()]; if(v!==undefined) return v; }
+        return '';
+      }
+      try{
+        const testUrl = `${WEBHOOK_URL}?${params.toString()}`;
+        let first = await fetchJson(testUrl);
+        if (!first.ok || (first.parsed && first.parsed.code === 0 && /could not be started/i.test(String(first.parsed.message||'')))){
+          const prodUrl = testUrl.replace('/webhook-test/', '/webhook/');
+          first = await fetchJson(prodUrl);
+        }
+        if (!first.ok) return 0;
+        let rows = pickRows(first.parsed ?? (first.raw ? JSON.parse(first.raw) : null));
+        if (statusVal === 'Doing'){
+          rows = rows.filter(item=>{
+            const s = String(getV(item,['status','trangthai','trang_thai','trạng thái'])||'').toLowerCase();
+            return s.includes('doing') || s.includes('đang');
+          });
+        }
+        return rows.length;
+      }catch(_){ return 0; }
+    }
+
+    // Form 4 logic: GET Doing data and render two columns
+    async function renderForm4(){
+      const body = document.getElementById('f4-body');
+      const chartWrap = document.getElementById('f4-chart-container');
+      if (chartWrap) chartWrap.style.display = 'none';
+      if (F4_CHART) { try { F4_CHART.destroy(); } catch(_) {} F4_CHART = null; }
+      body.innerHTML = "<tr><td colspan='3' class='px-3 py-3 text-center text-gray-500'><span class='spinner mr-2'></span>Đang tải...</td></tr>";
+      try{
+        const urlBase = 'https://xcqiyibqs.tino.page/webhook/917f595d-ea6f-422c-920e-c7079f90881b';
+        // Try test endpoint first to avoid CORS, then fallback to prod
+        const urlTest = urlBase.includes('/webhook/') ? urlBase.replace('/webhook/','/webhook-test/') : urlBase;
+        const urlProd = urlBase.includes('/webhook-test/') ? urlBase.replace('/webhook-test/','/webhook/') : urlBase;
+        const params = new URLSearchParams();
+        const statusSel = document.getElementById('f4-status');
+        const statusVal = (statusSel && statusSel.value) ? statusSel.value : 'Doing';
+        params.append('status', statusVal);
+        // Date range filter
+        const fromInput = document.getElementById('f4-from');
+        const toInput = document.getElementById('f4-to');
+        const fromVal = (fromInput && fromInput.value) ? fromInput.value : '';
+        const toVal = (toInput && toInput.value) ? toInput.value : '';
+        if (fromVal) params.append('from', fromVal);
+        if (toVal) params.append('to', toVal);
+        // Timestamp to bypass caches
+        params.append('_ts', Date.now().toString());
+        // Debug: log the exact URL being requested
+        try { console.log('Form4 GET (test):', `${urlTest}?${params.toString()}`); } catch(_) {}
+
+        async function fetchJson(url){
+          try{
+            const r = await fetch(url, { method: 'GET' });
+            const text = await r.text();
+            let parsed = null;
+            try { parsed = JSON.parse(text); } catch { parsed = null; }
+            console.log('🔍 Form4 Response:', { url, status: r.status, ok: r.ok, contentType: r.headers.get('content-type'), textLength: text.length, parsedType: typeof parsed, text: text.substring(0, 500) });
+            return { ok: r.ok, ct: r.headers.get('content-type')||'', parsed, raw: text, status: r.status };
+          }catch(err){
+            console.error('🚨 Form4 Fetch Error:', err);
+            return { ok:false, ct:'', parsed:null, raw:String(err||''), status:0 };
+          }
+        }
+
+        let first = await fetchJson(`${urlTest}?${params.toString()}`);
+        // Fallback to production webhook if test not active or server error like n8n "Can't determine which item to use"
+        if (!first.ok || /could not be started/i.test(String(first.parsed?.message||'')) || /Can't determine which item to use|Can't determine which item to use/i.test(first.raw||'')){
+          try { console.warn('Form4 GET fallback -> prod'); } catch(_){ }
+          first = await fetchJson(`${urlProd}?${params.toString()}`);
+        }
+        if(!first.ok){
+          console.error('🚨 Form4 Final Error:', first);
+          throw new Error(first.raw || `HTTP ${first.status}`);
+        }
+        let data = first.parsed;
+        if (!data){
+          try { data = JSON.parse(first.raw||''); } catch { data = null; }
+        }
+        function pickRowsDeep(json){
+          if (!json) return [];
+          if (Array.isArray(json) && json.length && typeof json[0] === 'object') return json;
+          const candidates = ['data','rows','result','records','items','list'];
+          for (const k of candidates){ if (Array.isArray(json?.[k]) && json[k].length && typeof json[k][0] === 'object') return json[k]; }
+          try{
+            const queue=[json]; const seen=new Set();
+            while(queue.length){
+              const cur = queue.shift();
+              if (!cur || typeof cur !== 'object' || seen.has(cur)) continue;
+              seen.add(cur);
+              for (const v of Object.values(cur)){
+                if (Array.isArray(v) && v.length && typeof v[0] === 'object') return v;
+                if (v && typeof v === 'object') queue.push(v);
+              }
+            }
+          }catch(_){ }
+          // If response is CSV-like, split lines and map to objects with minimal fields
+          try {
+            if (typeof json === 'string'){
+              const lines = json.trim().split(/\r?\n/).filter(Boolean);
+              if (lines.length >= 2){
+                const header = lines[0].split(',').map(s=>s.trim());
+                const rows = lines.slice(1).map(line=>{
+                  const cols = line.split(',');
+                  const obj = {};
+                  header.forEach((h,i)=> obj[h] = (cols[i]||'').trim());
+                  return obj;
+                });
+                return rows;
+              }
+            }
+          }catch(_){ }
+          return [];
+        }
+        const rows = pickRowsDeep(data);
+        console.log('🔍 Form4 Parsed Data:', { dataType: typeof data, isArray: Array.isArray(data), data, rowsFound: rows.length, firstRow: rows[0] });
+        if(!rows.length){ 
+          console.warn('⚠️ Form4: Không tìm thấy rows trong response');
+          body.innerHTML = "<tr><td colspan='3' class='px-3 py-3 text-center text-gray-500'>Không có dữ liệu</td></tr>"; 
+          if(chartWrap) chartWrap.style.display='none'; 
+          return; 
+        }
+        const getV = (obj, keys)=>{
+          const lower = Object.keys(obj||{}).reduce((acc,k)=>{ acc[k.toLowerCase()] = obj[k]; return acc; },{});
+          for(const k of keys){ const v = lower[k.toLowerCase()]; if(v!==undefined) return v; }
+          return '';
+        };
+        const normalized = rows.map(r=>{
+          const name = getV(r,['employee','nhanvien','nhan_vien','user','name','nhân viên','Nhân viên']).toString().trim();
+          const manRaw = getV(r,['manhour','current_manhour','congchuan','cong_chuan','hours','công chuẩn hiện tại','Công chuẩn hiện tại']);
+          const man = Number(manRaw);
+          const countRaw = getV(r,['taskcount','task_count','count','sotacvu','so_tac_vu','số tác vụ','Số tác vụ']);
+          const count = Number(countRaw);
+          const result = { name: name || '-', manhour: isNaN(man) ? 0 : man, count: isNaN(count) ? null : count };
+          console.log('🔍 Form4 Row Mapping:', { original: r, mapped: result, nameFound: name, manHourFound: manRaw, countFound: countRaw });
+          return result;
+        }).filter(x=>x.name && x.name !== '-');
+        console.log('🔍 Form4 Final Normalized:', normalized);
+        // Cập nhật danh sách người trong popover
+        F4_ALL_NAMES = Array.from(new Set(normalized.map(x=>x.name)));
+        f4BuildFilterList(F4_ALL_NAMES);
+        // Lọc theo các tên đã chọn (Set rỗng = tất cả)
+        const selectedNames = Array.from(F4_SELECTED_NAMES);
+        const filtered = selectedNames.length ? normalized.filter(x => F4_SELECTED_NAMES.has(x.name)) : normalized;
+        if (!filtered.length) { body.innerHTML = "<tr><td colspan='3' class='px-3 py-3 text-center text-gray-500'>Không có dữ liệu</td></tr>"; if(chartWrap) chartWrap.style.display='none'; return; }
+        const normalizedSorted = filtered.slice().sort((a,b)=> b.manhour - a.manhour);
+        const html = normalizedSorted.map(x=>
+          `<tr>
+             <td class="px-3 py-2">
+               <button class="text-primary-blue hover:underline" data-emp="${x.name}">${x.name}</button>
+             </td>
+             <td class="px-3 py-2">${x.manhour.toFixed(2)}</td>
+             <td class="px-3 py-2"><span class="emp-count" data-emp-count="${x.name}">${(x.count==null)?'<span class="spinner"></span>':String(x.count)}</span></td>
+           </tr>`
+        ).join('');
+        body.innerHTML = html;
+        // Điền số tác vụ bất đồng bộ theo trạng thái hiện tại
+        const statusForCount = statusVal;
+        const names = normalizedSorted.filter(x=> x.count == null).map(x=>x.name);
+        const findCountEl = (n)=>{
+          const all = body.querySelectorAll('.emp-count');
+          for (const el of all){ if ((el.getAttribute('data-emp-count')||'') === n) return el; }
+          return null;
+        };
+        const promises = names.map(async n=>{
+          const c = await f4FetchTaskCount(n, statusForCount, fromVal, toVal);
+          const el = findCountEl(n);
+          if (el) {
+            el.textContent = String(c);
+            try { const tr = el.closest('tr'); if (tr) tr.setAttribute('data-task-count', String(c)); } catch(_) {}
+          }
+        });
+        Promise.allSettled(promises).then(()=>{ try { f4ApplyCountFilter(); } catch(_) {} }).catch(()=>{});
+        // Render bar chart
+        const labels = normalizedSorted.map(x=> x.name);
+        const values = normalizedSorted.map(x=> x.manhour);
+        if (chartWrap) chartWrap.style.display = '';
+        const canvas = document.getElementById('f4-chart');
+        if (canvas && typeof Chart !== 'undefined'){
+          const ctx = canvas.getContext('2d');
+          if (F4_CHART) { try { F4_CHART.destroy(); } catch(_) {} }
+          F4_CHART = new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels,
+              datasets: [{
+                label: 'Công chuẩn nhận',
+                data: values,
+                backgroundColor: 'rgba(90, 169, 255, 0.6)',
+                borderColor: '#5aa9ff',
+                borderWidth: 1,
+                hoverBackgroundColor: 'rgba(59, 130, 246, 0.7)'
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  title: { display: true, text: 'Công chuẩn nhận' }
+                },
+                x: {
+                  title: { display: true, text: 'Nhân viên' },
+                  ticks: { autoSkip: false, maxRotation: 45, minRotation: 0 }
+                }
+              },
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    label: (ctx)=> ` ${Number(ctx.raw).toFixed(2)}`
+                  }
+                }
+              }
+            }
+          });
+        }
+      }catch(err){
+        body.innerHTML = `<tr><td colspan='3' class='px-3 py-3 text-center text-red-600'>Lỗi tải dữ liệu: ${String(err.message || err)}</td></tr>`;
+        if (chartWrap) chartWrap.style.display = 'none';
+        if (F4_CHART) { try { F4_CHART.destroy(); } catch(_) {} F4_CHART = null; }
+      }
+    }
+    // ===== Form 4: Modal chi tiết theo nhân viên =====
+    const detailModal = document.getElementById('detail-modal');
+    const detailBody = document.getElementById('detail-body');
+    const detailNameEl = document.getElementById('detail-name');
+    const detailNote = document.getElementById('detail-note');
+    const detailClose = document.getElementById('detail-close');
+
+    function openDetailModal(empName, filter, from, to){
+      if (!detailModal) return;
+      detailNameEl.textContent = empName || '';
+      detailBody.innerHTML = `<tr><td colspan="8" class="px-3 py-3 text-center text-gray-500"><span class="spinner mr-2"></span>Đang tải...</td></tr>`;
+      detailNote.textContent = filter === 'Doing' ? 'Chỉ hiển thị tác vụ đang Doing.' : 'Hiển thị tất cả tác vụ.';
+      detailModal.classList.add('open');
+      detailModal.setAttribute('aria-hidden','false');
+      renderDetailTasks(empName, filter, from, to).catch(()=>{});
+    }
+    function closeDetailModal(){
+      if (!detailModal) return;
+      detailModal.classList.remove('open');
+      detailModal.setAttribute('aria-hidden','true');
+    }
+    if (detailClose) detailClose.onclick = closeDetailModal;
+    if (detailModal) detailModal.addEventListener('click', (e)=>{ if(e.target===detailModal) closeDetailModal(); });
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && detailModal && detailModal.classList.contains('open')) closeDetailModal(); });
+
+    async function renderDetailTasks(name, filter, from, to){
+      const headerMapF1 = {
+        header_requester: 'Người yêu cầu',
+        header_requestDate: 'Ngày yêu cầu',
+        header_wishDue: 'Hạn mong muốn',
+        header_actualDue: 'Hạn đáp ứng',
+        header_code: 'Mã',
+        header_taskName: 'Tên tác vụ',
+        header_manHour: 'Công chuẩn',
+        header_status: 'Trạng thái',
+        field_requester: 'requester',
+        field_requestDate: 'requestDate',
+        field_wishDue: 'wishDue',
+        field_actualDue: 'actualDue',
+        field_code: 'code',
+        field_taskName: 'taskName',
+        field_manHour: 'manHour',
+        field_status: 'status'
+      };
+      const params = new URLSearchParams({
+        ...headerMapF1,
+        action: 'form1_lookup',
+        person_name: name,
+        timestamp: new Date().toISOString()
+      });
+      if (from) params.append('from', from);
+      if (to) params.append('to', to);
+      function getV(obj, keys){
+        const lower = Object.keys(obj||{}).reduce((acc,k)=>{ acc[k.toLowerCase()] = obj[k]; return acc; },{});
+        for(const k of keys){ const v = lower[k.toLowerCase()]; if(v!==undefined) return v; }
+        return '';
+      }
+      async function fetchJson(url){
+        const r = await fetch(url, { method: 'GET' });
+        const text = await r.text();
+        let parsed = null; try{ parsed = JSON.parse(text); }catch{ parsed = null; }
+        return { ok: r.ok, parsed, raw: text, status: r.status };
+      }
+      try{
+        const testUrl = `${WEBHOOK_URL}?${params.toString()}`;
+        let first = await fetchJson(testUrl);
+        if (!first.ok || (first.parsed && first.parsed.code === 0 && /could not be started/i.test(String(first.parsed.message||'')))){
+          const prodUrl = testUrl.replace('/webhook-test/', '/webhook/');
+          first = await fetchJson(prodUrl);
+        }
+        if (!first.ok) throw new Error(first.raw || `HTTP ${first.status}`);
+        const data = first.parsed ?? (first.raw ? JSON.parse(first.raw) : null);
+        function pickRows(json){
+          if (!json) return [];
+          if (Array.isArray(json)) return json;
+          const candidates = ['data','rows','result','records','items','list'];
+          for (const k of candidates){ if (Array.isArray(json?.[k])) return json[k]; }
+          try{
+            const queue=[json]; const seen=new Set();
+            while(queue.length){
+              const cur=queue.shift(); if(!cur||typeof cur!=='object'||seen.has(cur)) continue; seen.add(cur);
+              for (const v of Object.values(cur)){
+                if (Array.isArray(v) && v.length && typeof v[0]==='object') return v;
+                if (v && typeof v==='object') queue.push(v);
+              }
+            }
+          }catch(_){}
+          return [];
+        }
+        let rows = pickRows(data);
+        if (filter === 'Doing'){
+          rows = rows.filter(item=>{
+            const statusText = String(getV(item,['status','trangthai','trang_thai','trạng thái'])||'');
+            const s = statusText.toLowerCase();
+            const isDoing = s.includes('doing') || s.includes('đang');
+            return isDoing;
+          });
+        }
+        if (!rows.length){
+          detailBody.innerHTML = `<tr><td class="px-3 py-3 text-center text-gray-500" colspan="8">Không có tác vụ${filter==='Doing'?' Doing':''}.</td></tr>`;
+          return;
+        }
+        // Helper parse date (hỗ trợ YYYY-MM-DD, DD/MM/YYYY, DD-MM-YYYY, YYYY/MM/DD, có/không giờ)
+        function toDate(v){
+          if(!v) return null;
+          const s = String(v).trim();
+          let m = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})/);
+          if (m) {
+            const d = +m[1], mo = +m[2], y = m[3].length===2 ? +('20'+m[3]) : +m[3];
+            const dt = new Date(y, mo-1, d); return isNaN(dt) ? null : dt;
+          }
+          m = s.match(/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})/);
+          if (m) {
+            const dt = new Date(+m[1], +m[2]-1, +m[3]); return isNaN(dt) ? null : dt;
+          }
+          const dt = new Date(s);
+          return isNaN(dt) ? null : dt;
+        }
+
+        const html = rows.map(item=>{
+          const code = getV(item,['code','ma','taskcode','mã']);
+          const tname = getV(item,['taskname','ten_tac_vu','ten','name','title','tên tác vụ']);
+          const status = getV(item,['status','trangthai','trang_thai','trạng thái']);
+          const man = getV(item,['manhour','man_hour','congchuan','cong_chuan','workload','sogio','sogiocong','công chuẩn']);
+          const rq = getV(item,['requestdate','ngayyeucau','ngay_yeu_cau','submissiondate','ngaygui','ngày yêu cầu']);
+          const wish = getV(item,['wishdue','hanmongmuon','han_mong_muon','desireddue','hạn mong muốn']);
+          const act = getV(item,['actualdue','handapung','han_dap_ung','completiondate','hạn đáp ứng']);
+          const done = getV(item,['completiondate','completeddate','ngayhoanthanh','ngay_hoan_thanh','completion','done_date','ngày hoàn thành']);
+
+          const dueForCompare = act || wish || '';
+          const isLate = (()=>{ const d1 = toDate(done), d2 = toDate(dueForCompare); return d1 && d2 ? (d1.getTime() > d2.getTime()) : false; })();
+          const trClass = isLate ? 'bg-yellow-100' : '';
+
+          return `
+            <tr class="${trClass}">
+              <td class="px-3 py-2">${code}</td>
+              <td class="px-3 py-2">${tname}</td>
+              <td class="px-3 py-2">${status}</td>
+              <td class="px-3 py-2">${man}</td>
+              <td class="px-3 py-2">${rq}</td>
+              <td class="px-3 py-2">${wish}</td>
+              <td class="px-3 py-2">${act}</td>
+              <td class="px-3 py-2">${done}</td>
+            </tr>
+          `;
+        }).join('');
+        detailBody.innerHTML = html;
+      }catch(err){
+        detailBody.innerHTML = `<tr><td class="px-3 py-3 text-center text-red-600" colspan="8">Lỗi tải dữ liệu: ${String(err.message||err)}</td></tr>`;
+      }
+    }
+
+    // Copy on click and open link for storage (Form 1)
+    const f1StorageLink = document.getElementById('f1-storage-link');
+    if (f1StorageLink) {
+      f1StorageLink.addEventListener('click', async ()=>{
+        const url = f1StorageLink.getAttribute('href') || '';
+        try { await navigator.clipboard.writeText(url); showToast('Đã copy liên kết.','success'); }
+        catch(_) { /* ignore copy error to not block open */ }
+      });
+    }
+    // Trigger fetch only when nhấn Tra cứu ở Form 4
+    const f4Btn = document.getElementById('f4-search');
+    if (f4Btn) {
+      f4Btn.addEventListener('click', (e)=>{ e.preventDefault(); renderForm4(); });
+    }
+    // Trigger fetch only when nhấn Tra cứu ở Form 5
+    const f5Btn = document.getElementById('f5-search');
+    if (f5Btn) {
+      f5Btn.addEventListener('click', async (e)=>{
+        e.preventDefault();
+        if (f5Btn.disabled) return;
+        const prev = f5Btn.textContent;
+        f5Btn.disabled = true;
+        f5Btn.innerHTML = "<span class='spinner mr-2'></span>Đang tải...";
+        try { await renderForm5List(); }
+        finally {
+          f5Btn.disabled = false;
+          f5Btn.textContent = prev || 'Tra cứu';
+        }
+      });
+    }
+    // Tự động render khi đổi trạng thái
+    const f4StatusSel = document.getElementById('f4-status');
+    if (f4StatusSel) f4StatusSel.addEventListener('change', ()=> renderForm4());
+    const f4FromInput = document.getElementById('f4-from');
+    const f4ToInput = document.getElementById('f4-to');
+    if (f4FromInput) f4FromInput.addEventListener('change', ()=> renderForm4());
+    if (f4ToInput) f4ToInput.addEventListener('change', ()=> renderForm4());
+    const f4CountFilterInput = document.getElementById('f4-count-filter');
+    if (f4CountFilterInput) f4CountFilterInput.addEventListener('input', ()=> f4ApplyCountFilter());
+    const f4PeopleSel2 = document.getElementById('f4-people');
+    if (f4PeopleSel2) f4PeopleSel2.addEventListener('change', ()=> renderForm4());
+    // Click tên nhân viên để xem chi tiết
+    const f4Body = document.getElementById('f4-body');
+    if (f4Body) {
+      f4Body.addEventListener('click', (e)=>{
+        const btn = e.target.closest('[data-emp]');
+        if (!btn) return;
+        const name = btn.getAttribute('data-emp') || '';
+        const filter = (document.getElementById('f4-status')?.value === 'Doing') ? 'Doing' : 'All';
+        const fromVal = (document.getElementById('f4-from')?.value || '');
+        const toVal = (document.getElementById('f4-to')?.value || '');
+        if (name) openDetailModal(name, filter, fromVal, toVal);
+      });
+    }
+
+    // Form 4: filter rows by "số tác vụ" (>= input)
+    function f4ApplyCountFilter(){
+      const input = document.getElementById('f4-count-filter');
+      const body = document.getElementById('f4-body');
+      if (!input || !body) return;
+      const raw = (input.value || '').trim();
+      const threshold = raw === '' ? NaN : parseInt(raw, 10);
+      const rows = body.querySelectorAll('tr');
+      rows.forEach(tr=>{
+        const cEl = tr.querySelector('.emp-count');
+        if (!cEl) return;
+        const val = parseInt((cEl.textContent || '').trim(), 10);
+        if (isNaN(threshold)) {
+          tr.style.display = '';
+        } else if (isNaN(val)) {
+          tr.style.display = '';
+        } else {
+          tr.style.display = (val >= threshold) ? '' : 'none';
+        }
+      });
+    }
+
+    // ===== Form 5: submit and list ideas =====
+    async function renderForm5List(){
+      const body = document.getElementById('f5-body');
+      if (!body) return;
+      body.innerHTML = "<tr><td colspan='6' class='px-3 py-3 text-center text-gray-500'><span class='spinner mr-2'></span>Đang tải...</td></tr>";
+      const headerMapF5 = {
+        header_submitDate: 'Ngày nộp',
+        header_employee: 'Nhân viên',
+        header_title: 'Tiêu đề ý tưởng',
+        header_problem: 'Vấn đề nhận diện',
+        header_solution: 'Giải pháp',
+        field_submitDate: 'submitDate',
+        field_employee: 'employee',
+        field_title: 'title',
+        field_problem: 'problem',
+        field_solution: 'solution'
+      };
+      const params = new URLSearchParams({ ...headerMapF5, action: 'form5_list', _ts: Date.now().toString() });
+      async function fetchJson(url){
+        const r = await fetch(url, { method: 'GET' });
+        const t = await r.text();
+        let parsed=null; try{ parsed=JSON.parse(t);}catch{}
+        return { ok:r.ok, parsed, raw:t, status:r.status };
+      }
+      function pickRows(json){
+        if (!json) return [];
+        if (Array.isArray(json)) return json;
+        const cands=['data','rows','result','records','items','list'];
+        for (const k of cands){ if (Array.isArray(json?.[k])) return json[k]; }
+        try{
+          const q=[json], seen=new Set();
+          while(q.length){
+            const cur=q.shift(); if(!cur||typeof cur!=='object'||seen.has(cur)) continue; seen.add(cur);
+            for (const v of Object.values(cur)){ if (Array.isArray(v) && v.length && typeof v[0]==='object') return v; if (v && typeof v==='object') q.push(v); }
+          }
+        }catch(_){}
+        return [];
+      }
+      let first = await fetchJson(`${FORM5_LIST_URL}?${params.toString()}`);
+      if (!first.ok || (first.parsed && first.parsed.code===0 && /could not be started/i.test(String(first.parsed.message||'')))){
+        first = await fetchJson(`${FORM5_LIST_URL.replace('/webhook-test/','/webhook/')}?${params.toString()}`);
+      }
+      if (!first.ok){
+        body.innerHTML = `<tr><td colspan='6' class='px-3 py-3 text-center text-red-600'>Lỗi tải: ${String(first.raw||first.status)}</td></tr>`;
+        return;
+      }
+      const rows = pickRows(first.parsed ?? (first.raw ? JSON.parse(first.raw) : null));
+      if (!rows.length){
+        body.innerHTML = '<tr><td class="px-3 py-3 text-center text-gray-500" colspan="6">Chưa có dữ liệu</td></tr>';
+        F5_LAST_COUNT = 0;
+        return;
+      }
+      const getV = (obj, keys)=>{
+        const lower = Object.keys(obj||{}).reduce((a,k)=>{ a[k.toLowerCase()] = obj[k]; return a; },{});
+        for (const k of keys){ const v = lower[k.toLowerCase()]; if(v!==undefined) return v; }
+        return '';
+      };
+      const html = rows.map((item)=>{
+        const date = getV(item,['submitdate','date','submit_date','ngaynop','ngay_nop']);
+        const emp = getV(item,['employee','nhanvien','nhan_vien','nhân viên']);
+        const title = getV(item,['title','tieude','tieu_de','tiêu đề ý tưởng']);
+        const prob = getV(item,['problem','van_de','vande','vấn đề nhận diện']);
+        const sol = getV(item,['solution','giai_phap','giaiphap','giải pháp']);
+        return `<tr>
+          <td class="px-3 py-2">${date}</td>
+          <td class="px-3 py-2">${emp}</td>
+          <td class="px-3 py-2">${title}</td>
+          <td class="px-3 py-2">${prob}</td>
+          <td class="px-3 py-2">${sol}</td>
+        </tr>`;
+      }).join('');
+      body.innerHTML = html;
+      F5_LAST_COUNT = rows.length;
+    }
+
+    (function setupForm5(){
+      const openBtn = document.getElementById('f5-open-submit');
+      const modal = document.getElementById('f5-modal');
+      const sendBtn = document.getElementById('f5-btn-send');
+      const cancelBtn = document.getElementById('f5-btn-cancel');
+      const countBox = document.getElementById('f5-count');
+
+      function openF5Modal(){
+        try { setF5DateDefault(); } catch(_){}
+        // reset inputs
+        try{ (document.getElementById('f5-title')||{}).value=''; }catch(_){ }
+        try{ (document.getElementById('f5-problem')||{}).value=''; }catch(_){ }
+        try{ (document.getElementById('f5-solution')||{}).value=''; }catch(_){ }
+        if (modal){ modal.classList.add('open'); modal.setAttribute('aria-hidden','false'); }
+      }
+      function closeF5Modal(){ if (modal){ modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); } }
+      if (openBtn) openBtn.addEventListener('click', (e)=>{ e.preventDefault(); openF5Modal(); });
+      if (cancelBtn) cancelBtn.addEventListener('click', (e)=>{ e.preventDefault(); closeF5Modal(); });
+      if (modal) modal.addEventListener('click', (e)=>{ if(e.target===modal) closeF5Modal(); });
+      document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && modal && modal.classList.contains('open')) closeF5Modal(); });
+
+      async function submitF5(){
+        const date = (document.getElementById('f5-date')?.value||'').trim();
+        const emp = (document.getElementById('f5-employee')?.value||'').trim();
+        const title = (document.getElementById('f5-title')?.value||'').trim();
+        const prob = (document.getElementById('f5-problem')?.value||'').trim();
+        const sol = (document.getElementById('f5-solution')?.value||'').trim();
+        if (!date || !emp || !title || !prob || !sol){ showToast('Vui lòng điền đủ tất cả trường.','error'); return; }
+        const prev = sendBtn ? sendBtn.textContent : '';
+        if (sendBtn){ sendBtn.disabled = true; sendBtn.innerHTML = "<span class='spinner mr-2'></span>Đang gửi..."; }
+        // Build payload (send both submitDate and date for compatibility)
+        const toDMY = (v)=>{ try{ const [y,m,d] = String(v||'').split('-'); return `${d}/${m}/${y}`; }catch(_){ return String(v||''); } };
+        const p = new URLSearchParams({
+          submitDate: date,
+          date: date,
+          submit_date: date,
+          ngay_nop: date,
+          ngayNop: date,
+          ngayNopDMY: toDMY(date),
+          employee: emp,
+          title,
+          problem: prob,
+          solution: sol,
+          _ts: Date.now().toString()
+        });
+        async function tryPost(url){
+          try{
+            const r = await fetch(url, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: p.toString() });
+            const t = await r.text().catch(()=>"");
+            return { ok: r.ok, raw: t };
+          }catch(err){ return { ok:false, raw: String(err||'') }; }
+        }
+        async function tryPostNoCors(url){
+          try{
+            await fetch(url, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: p.toString() });
+            // opaque response cannot be inspected; treat as success if resolved
+            return { ok: true, raw: '' };
+          }catch(err){ return { ok:false, raw: String(err||'') }; }
+        }
+        async function tryGet(url){
+          try{
+            const r = await fetch(`${url}?${p.toString()}`, { method:'GET' });
+            const t = await r.text();
+            return { ok: r.ok, raw: t };
+          }catch(err){ return { ok:false, raw: String(err||'') }; }
+        }
+        try{
+          // 1) POST no-cors to test URL (avoid CORS false negatives)
+          let r = await tryPostNoCors(FORM5_SUBMIT_URL);
+          // 2) If above failed (network), try normal POST test URL
+          if (!r.ok) r = await tryPost(FORM5_SUBMIT_URL);
+          // 3) Fallback GET test URL
+          if (!r.ok || /could not be started/i.test(r.raw||'')) r = await tryGet(FORM5_SUBMIT_URL);
+          // 4) Fallback POST prod URL
+          if (!r.ok || /could not be started/i.test(r.raw||'')) r = await tryPost(FORM5_SUBMIT_URL.replace('/webhook-test/','/webhook/'));
+          // 5) Fallback GET prod URL
+          if (!r.ok || /could not be started/i.test(r.raw||'')) r = await tryGet(FORM5_SUBMIT_URL.replace('/webhook-test/','/webhook/'));
+          if (!r.ok) throw new Error(r.raw||'Gửi thất bại');
+          showToast('Đã gửi ý tưởng.','success');
+          closeF5Modal();
+          // Làm mới bảng sau 3 giây để backend kịp ghi dữ liệu
+          setTimeout(()=>{ try{ renderForm5List(); }catch(_){} }, 3000);
+        }catch(err){
+          showToast('Gửi thất bại.','error');
+        }finally{
+          if (sendBtn){ sendBtn.disabled=false; sendBtn.textContent = prev || 'Gửi ý tưởng'; }
+        }
+      }
+      if (sendBtn) sendBtn.addEventListener('click', (e)=>{ e.preventDefault(); submitF5(); });
+
+      if (countBox){
+        countBox.addEventListener('click', ()=>{
+          countBox.innerHTML = `<span>📊</span><span>Số ý tưởng đã nộp: <b>${F5_LAST_COUNT}</b></span>`;
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
